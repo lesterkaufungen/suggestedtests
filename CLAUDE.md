@@ -15,8 +15,10 @@ Windows, Linux and macOS and is bundled through a Dart build hook (`hook/build.d
 
 - Flutter SDK lives at `~/development/flutter` (add `~/development/flutter/bin` to `PATH`).
 - Dart comes bundled with Flutter. Use `flutter`/`dart` from that SDK.
-- Rust via rustup (`~/.cargo/bin`). Linux prebuilts need zig (`/opt/zig`) and
-  `cargo install cargo-zigbuild`.
+- Rust via rustup (`~/.cargo/bin`). Prebuilts for all 8 targets are built on Linux:
+  zig (`/opt/zig`) + `cargo install cargo-zigbuild` for Linux and macOS,
+  `cargo install cargo-xwin` for Windows (downloads the MSVC CRT/SDK into
+  `~/.cache/cargo-xwin` on first use).
 
 ## Commands
 
@@ -30,7 +32,7 @@ dart pub publish --dry-run         # must report 0 warnings before publishing
 
 # native bridge
 (cd native && cargo test --release && cargo clippy --release -- -D warnings)
-PATH=/opt/zig:$PATH tool/build_prebuilt.sh linux   # refresh native/prebuilt/linux-*
+for os in linux macos windows; do PATH=/opt/zig:$PATH tool/build_prebuilt.sh $os; done
 python3 tool/check_load.py native/prebuilt/linux-x64/libsuggestedtests_native.so
 ```
 
@@ -52,7 +54,7 @@ lib/src/native/bindings.dart raw @Native FFI bindings (private; asset id = this 
 hook/build.dart              picks native/prebuilt/<os>-<arch>[-musl]/, else cargo build, else nothing
 native/                      Rust crate (cdylib): src/lib.rs = C ABI, src/sys/{unix,linux,macos,windows}.rs
 native/include/*.h           C header; must match lib.rs and bindings.dart
-native/prebuilt/             shipped binaries (committed; CI artifact `prebuilt-all` has all OSes)
+native/prebuilt/             shipped binaries (committed; built locally with tool/build_prebuilt.sh)
 tool/build_prebuilt.sh       builds prebuilts for one OS family (linux|macos|windows)
 tool/check_load.py           ctypes smoke test for a prebuilt library
 .github/workflows/ci.yml     cargo test x3 OS, prebuilts, Alpine/CentOS7 load checks, flutter test x4
@@ -101,8 +103,9 @@ assets/logo.svg|png          logo (PNG rendered from SVG: rsvg-convert -w 512 -h
 ## Releasing to pub.dev
 
 1. Bump `version` in `pubspec.yaml` (semver) and add a `CHANGELOG.md` entry.
-   Download the `prebuilt-all` artifact from a green CI run on that commit
-   and unpack it into `native/prebuilt/`, so all 8 platform folders exist.
+   If `native/` changed, rebuild all 8 prebuilts locally (see Commands) on the
+   `local-only` branch, which is never pushed, then bring them to `main` with
+   `git checkout local-only -- native/prebuilt` and commit.
 2. `flutter analyze && flutter test && dart pub publish --dry-run`.
 3. `dart pub publish`. Publishing is permanent: a version can't be deleted, only retracted within 7 days.
 4. Tag the commit: `git tag v<version> && git push --tags`.
