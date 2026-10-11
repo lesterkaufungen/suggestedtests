@@ -1,0 +1,28 @@
+[package]
+name = "suggestedtests_native"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "OS-agnostic C ABI bridge (Windows/Linux/macOS) used by the suggestedtests Dart package."
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = [
+    "Win32_Foundation",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
