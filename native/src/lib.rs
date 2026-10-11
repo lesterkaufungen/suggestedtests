@@ -100,13 +100,23 @@ pub extern "C" fn st_cpu_count() -> u32 {
 mod tests {
     use super::*;
 
-    fn burn() -> u64 {
-        // Enough work to register on a ~1ms-resolution clock.
+    /// Spins until `read()` returns a larger value. CPU clocks tick coarsely on
+    /// some systems (~15.6ms on Windows), so a fixed amount of work may not
+    /// register. Panics after 5s of wall time.
+    fn burn_until_advances(read: impl Fn() -> u64) -> (u64, u64) {
+        let before = read();
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
         let mut x = 0u64;
-        for i in 0..20_000_000u64 {
-            x = x.wrapping_mul(31).wrapping_add(i);
+        loop {
+            for i in 0..100_000u64 {
+                x = std::hint::black_box(x.wrapping_mul(31).wrapping_add(i));
+            }
+            let after = read();
+            if after > before {
+                return (before, after);
+            }
+            assert!(std::time::Instant::now() < deadline, "CPU clock never advanced");
         }
-        std::hint::black_box(x)
     }
 
     #[test]
@@ -125,24 +135,21 @@ mod tests {
 
     #[test]
     fn process_cpu_time_increases() {
-        let mut before = StCpuTime::default();
-        let mut after = StCpuTime::default();
-        unsafe {
-            assert_eq!(st_process_cpu_time(&mut before), ST_OK);
-            burn();
-            assert_eq!(st_process_cpu_time(&mut after), ST_OK);
-        }
-        assert!(after.user_ns + after.system_ns > before.user_ns + before.system_ns);
+        let (before, after) = burn_until_advances(|| {
+            let mut t = StCpuTime::default();
+            assert_eq!(unsafe { st_process_cpu_time(&mut t) }, ST_OK);
+            t.user_ns + t.system_ns
+        });
+        assert!(after > before);
     }
 
     #[test]
     fn thread_cpu_time_increases() {
-        let (mut before, mut after) = (0u64, 0u64);
-        unsafe {
-            assert_eq!(st_thread_cpu_time_ns(&mut before), ST_OK);
-            burn();
-            assert_eq!(st_thread_cpu_time_ns(&mut after), ST_OK);
-        }
+        let (before, after) = burn_until_advances(|| {
+            let mut t = 0u64;
+            assert_eq!(unsafe { st_thread_cpu_time_ns(&mut t) }, ST_OK);
+            t
+        });
         assert!(after > before);
     }
 

@@ -102,13 +102,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: prebuilt-all
-          path: native/prebuilt/
-      - uses: subosito/flutter-action@v2
+      - if: runner.arch != 'ARM64' || runner.os != 'Linux'
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
+      # No prebuilt Flutter SDK archive exists for Linux arm64; install from git.
+      - if: runner.arch == 'ARM64' && runner.os == 'Linux'
+        run: |
+          git clone --depth 1 -b stable https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter --version
       # The prebuilt library must be used as-is: hide cargo so the hook
       # cannot silently fall back to a source build.
       - name: Hide cargo
@@ -119,10 +122,16 @@ jobs:
           done
           ! command -v cargo
       - run: flutter pub get
+      # Package checks run on the committed tree, before CI's fresh prebuilts
+      # overwrite native/prebuilt/ (which would make the git state dirty).
       - if: matrix.os == 'ubuntu-latest'
         run: |
           dart format --output=none --set-exit-if-changed .
           flutter analyze
           flutter pub publish --dry-run
+      - uses: actions/download-artifact@v4
+        with:
+          name: prebuilt-all
+          path: native/prebuilt/
       - run: flutter test
       - run: flutter test example/example.dart

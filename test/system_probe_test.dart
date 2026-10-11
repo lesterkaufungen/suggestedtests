@@ -3,12 +3,21 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:suggestedtests/suggestedtests.dart';
 
-int _burn() {
+/// Spins until [read] returns a larger value and returns both samples.
+/// CPU clocks tick coarsely on some systems (~15.6ms on Windows), so a fixed
+/// amount of work may not register.
+(T, T) _burnUntilAdvances<T extends Comparable<Object>>(T Function() read) {
+  final before = read();
+  final deadline = DateTime.now().add(const Duration(seconds: 5));
   var x = 0;
-  for (var i = 0; i < 30000000; i++) {
-    x = (x * 31 + i) & 0xffffffff;
+  while (true) {
+    for (var i = 0; i < 100000; i++) {
+      x = (x * 31 + i) & 0xffffffff;
+    }
+    final after = read();
+    if (after.compareTo(before) > 0) return (before, after);
+    if (DateTime.now().isAfter(deadline)) fail('CPU clock never advanced ($x)');
   }
-  return x;
 }
 
 void main() {
@@ -22,7 +31,7 @@ void main() {
   group('SystemProbe', skip: SystemProbe.skipReason, () {
     test('processCpuTime grows with work', () {
       final before = SystemProbe.processCpuTime();
-      _burn();
+      _burnUntilAdvances(() => SystemProbe.processCpuTime().total);
       final spent = SystemProbe.processCpuTime() - before;
       expect(spent.total, greaterThan(Duration.zero));
       expect(spent.user, greaterThanOrEqualTo(Duration.zero));
@@ -30,9 +39,8 @@ void main() {
     });
 
     test('threadCpuTime grows with work', () {
-      final before = SystemProbe.threadCpuTime();
-      _burn();
-      expect(SystemProbe.threadCpuTime(), greaterThan(before));
+      final (before, after) = _burnUntilAdvances(SystemProbe.threadCpuTime);
+      expect(after, greaterThan(before));
     });
 
     test('memoryUsage is plausible', () {
