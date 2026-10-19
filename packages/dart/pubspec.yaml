@@ -1,0 +1,36 @@
+name: suggestedtests
+description: >-
+  Flutter test helpers: table-driven cases, given/when/then scenarios,
+  performance budgets, eventually, spies, seeded test data and WidgetTester
+  shortcuts.
+version: 0.1.0
+repository: https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/dart
+issue_tracker: https://github.com/lesterkaufungen/suggestedtests/issues
+topics:
+  - testing
+  - test
+  - performance
+  - benchmark
+  - widget-test
+
+screenshots:
+  - description: The suggestedtests logo
+    path: assets/logo.png
+
+environment:
+  sdk: ^3.10.0
+  flutter: ">=3.38.4"
+
+dependencies:
+  code_assets: '>=1.0.0 <3.0.0'
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+  hooks: '>=1.0.0 <3.0.0'
+  meta: ^1.15.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+flutter:

@@ -1,0 +1,89 @@
+{
+  "name": "suggestedtests",
+  "version": "0.1.0",
+  "description": "Test helpers for Vitest and Jest: performance and memory budgets backed by a native OS bridge, eventually, given/when/then scenarios, seeded test data and leak checks.",
+  "keywords": [
+    "testing",
+    "vitest",
+    "jest",
+    "performance",
+    "benchmark",
+    "memory",
+    "leak"
+  ],
+  "license": "MIT",
+  "author": "Lester K.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lesterkaufungen/suggestedtests.git",
+    "directory": "packages/js"
+  },
+  "bugs": "https://github.com/lesterkaufungen/suggestedtests/issues",
+  "homepage": "https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/js#readme",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "vitest": [
+        "vitest.d.mts"
+      ],
+      "jest": [
+        "jest.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vitest": {
+      "types": "./vitest.d.mts",
+      "default": "./vitest.mjs"
+    },
+    "./jest": {
+      "types": "./jest.d.ts",
+      "default": "./jest.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "prebuilds",
+    "vitest.mjs",
+    "vitest.d.mts",
+    "jest.js",
+    "jest.d.ts",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=10.20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepack": "node scripts/stage-prebuilds.mjs && npm run build",
+    "test:types": "node scripts/check-types.mjs",
+    "test:compat": "node test-compat/smoke.js"
+  },
+  "peerDependencies": {
+    "vitest": ">=1"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^22.10.0",
+    "jest": "^30.5.2",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.0"
+  }
+}

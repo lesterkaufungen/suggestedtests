@@ -3,6 +3,12 @@
 version = 3
 
 [[package]]
+name = "jni-sys"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8eaf4bc02d17cbdd7ff4c7438cafcdf7fb9a4613313ad11b4f8fefe7d3fa0130"
+
+[[package]]
 name = "libc"
 version = "0.2.190"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -12,7 +18,17 @@ checksum = "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
 name = "suggestedtests_native"
 version = "0.1.0"
 dependencies = [
+ "jni-sys",
  "libc",
+ "windows-sys",
+]
+
+[[package]]
+name = "suggestedtests_node"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "suggestedtests_native",
  "windows-sys",
 ]
 

@@ -1,0 +1,5 @@
+dist/
+prebuilds/
+node_modules/
+package-lock.json
+.type-check/

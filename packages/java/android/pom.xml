@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  POM of the Android AAR, deployed next to the .aar that tool/build_aar.sh builds:
+    mvn deploy:deploy-file -Dfile=target/suggestedtests-android-0.1.0.aar -DpomFile=android/pom.xml ...
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.lesterkaufungen</groupId>
+  <artifactId>suggestedtests-android</artifactId>
+  <version>0.1.0</version>
+  <packaging>aar</packaging>
+  <name>suggestedtests-android</name>
+  <description>suggestedtests for Android instrumented tests: the Java library plus the native bridge for arm64-v8a, armeabi-v7a, x86_64 and x86 (API 21+).</description>
+  <url>https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/java</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Lester K.</name>
+      <url>https://github.com/lesterkaufungen</url>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/lesterkaufungen/suggestedtests</url>
+    <connection>scm:git:https://github.com/lesterkaufungen/suggestedtests.git</connection>
+  </scm>
+</project>

@@ -1,0 +1,157 @@
+# The macOS check: every package's tests on Apple Silicon and Intel Macs,
+# with the committed prebuilts. It never compiles Rust (cargo is removed from
+# the runner first) and only runs when started by hand, between
+# `tool/release_publish.sh --push-only` and the real publish:
+#
+#   tool/macos_check.sh        # starts it on main and waits for the result
+#
+# This machine can't run macOS (CLAUDE.md, Releasing); nothing else uses CI.
+name: macos-check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    name: ${{ matrix.package }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-15-intel] # arm64, x86_64
+        package: [native, python, js, php, java, go, dart, swift]
+    env:
+      SUGGESTEDTESTS_VERBOSE: "0"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Remove Rust (packages must use the prebuilts)
+        run: |
+          rm -rf "$HOME/.cargo/bin" "$HOME/.rustup"
+          ! command -v cargo && ! command -v rustc
+
+      - name: Prebuilt for this Mac
+        id: mac
+        run: |
+          case "$(uname -m)" in
+            arm64) echo "dir=macos-arm64" >>"$GITHUB_OUTPUT" ;;
+            x86_64) echo "dir=macos-x64" >>"$GITHUB_OUTPUT" ;;
+            *) echo "unexpected arch $(uname -m)" && exit 1 ;;
+          esac
+
+      # ------------------------------------------------------------ native --
+      - if: matrix.package == 'native'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: matrix.package == 'native'
+        name: Load checks and the startup report
+        run: |
+          lib="native/prebuilt/${{ steps.mac.outputs.dir }}/libsuggestedtests_native.dylib"
+          python3 tool/check_load.py "$lib"
+          node tool/check_load_node.js "native/prebuilt/${{ steps.mac.outputs.dir }}/suggestedtests_native.node"
+          report="$(SUGGESTEDTESTS_VERBOSE=1 python3 -c "import ctypes, sys; ctypes.CDLL(sys.argv[1])" "$lib" 2>&1)"
+          echo "$report"
+          [ "$(grep -c 'suggestedtests: platform: ' <<<"$report")" = 1 ]
+          grep -q 'suggestedtests: platform: macos' <<<"$report"
+
+      # ------------------------------------------------------------ python --
+      - if: matrix.package == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.9
+            3.13
+      - if: matrix.package == 'python'
+        name: pytest on 3.9 and 3.13
+        run: |
+          for v in 3.9 3.13; do
+            "python$v" -m venv "/tmp/venv-$v"
+            "/tmp/venv-$v/bin/pip" install -q -e packages/python pytest
+            (cd packages/python && "/tmp/venv-$v/bin/python" -m pytest -q)
+          done
+
+      # ---------------------------------------------------------------- js --
+      - if: matrix.package == 'js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: matrix.package == 'js'
+        name: Vitest, Jest, and the dist/ smoke test
+        working-directory: packages/js
+        run: |
+          npm ci
+          npm test
+          npm run build
+          node test-compat/smoke.js
+
+      # --------------------------------------------------------------- php --
+      - if: matrix.package == 'php'
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: ffi
+          ini-values: ffi.enable=1
+          tools: composer
+      - if: matrix.package == 'php'
+        name: PHPUnit
+        working-directory: packages/php
+        run: |
+          composer update -q --no-interaction
+          vendor/bin/phpunit
+
+      # -------------------------------------------------------------- java --
+      - if: matrix.package == 'java'
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: |
+            8
+            21
+      - if: matrix.package == 'java'
+        name: Maven on Java 8 and 21
+        working-directory: packages/java
+        run: |
+          ./mvnw -B -q verify -Djvm="$JAVA_HOME_8_${{ runner.arch == 'ARM64' && 'ARM64' || 'X64' }}/bin/java"
+          ./mvnw -B -q verify
+
+      # ---------------------------------------------------------------- go --
+      - if: matrix.package == 'go'
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+      - if: matrix.package == 'go'
+        name: go test (cgo on and off)
+        working-directory: packages/go
+        run: |
+          CGO_ENABLED=0 go test -count=1 ./...
+          CGO_ENABLED=1 go test -count=1 ./...
+
+      # -------------------------------------------------------------- dart --
+      - if: matrix.package == 'dart'
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - if: matrix.package == 'dart'
+        name: flutter test, and the startup report
+        working-directory: packages/dart
+        run: |
+          flutter pub get
+          flutter test
+          flutter test example/example.dart
+          report="$(SUGGESTEDTESTS_VERBOSE=1 flutter test test/load_report_test.dart 2>&1)"
+          echo "$report"
+          [ "$(grep -c 'suggestedtests: platform: ' <<<"$report")" = 1 ]
+
+      # ------------------------------------------------------------- swift --
+      - if: matrix.package == 'swift'
+        name: swift test, in the monorepo and as the published package
+        run: |
+          swift --version
+          (cd packages/swift && swift test)
+          tool/stage.sh swift
+          mkdir -p "$RUNNER_TEMP/swift" && rsync -a --exclude .build packages/swift/ "$RUNNER_TEMP/swift/"
+          (cd "$RUNNER_TEMP/swift" && swift test)

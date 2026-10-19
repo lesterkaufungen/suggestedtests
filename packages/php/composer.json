@@ -1,0 +1,55 @@
+{
+    "name": "lesterkaufungen/suggestedtests",
+    "description": "PHPUnit helpers for PHP 7.4+: performance and memory budgets backed by a native OS bridge (ext-ffi), eventually, given/when/then steps, spies, snapshots and seeded test data.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "testing",
+        "phpunit",
+        "performance",
+        "benchmark",
+        "memory",
+        "snapshot",
+        "spy"
+    ],
+    "homepage": "https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/php",
+    "support": {
+        "issues": "https://github.com/lesterkaufungen/suggestedtests/issues",
+        "source": "https://github.com/lesterkaufungen/suggestedtests-php"
+    },
+    "authors": [
+        {
+            "name": "Lester K."
+        }
+    ],
+    "require": {
+        "php": ">=7.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6 || ^10.5 || ^11.5 || ^12.0"
+    },
+    "suggest": {
+        "ext-ffi": "Needed for the native bridge (CPU time, RSS). Everything else works without it.",
+        "phpunit/phpunit": "For the SuggestedTests\\PHPUnit\\SuggestedTests trait (PHPUnit 9.6 to 12)."
+    },
+    "autoload": {
+        "psr-4": {
+            "SuggestedTests\\": "src/"
+        },
+        "files": [
+            "src/load_bridge.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SuggestedTests\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "test": "phpunit",
+        "lint": "php bin/lint.php"
+    }
+}

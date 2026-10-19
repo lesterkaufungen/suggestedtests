@@ -11,21 +11,26 @@ mod unix;
 
 #[cfg(any(target_os = "linux", target_os = "android"))]
 mod linux;
+#[cfg(target_os = "android")]
+pub use linux::android_property;
 #[cfg(any(target_os = "linux", target_os = "android"))]
-pub use linux::memory_usage;
+pub use linux::{is_translated, libc_version, memory_usage, os_version};
 
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(target_os = "macos")]
-pub use macos::memory_usage;
+pub use macos::{is_translated, libc_version, memory_usage, os_version, sysctl_int, sysctl_string};
 
 #[cfg(unix)]
-pub use unix::{process_cpu_time, thread_cpu_time_ns};
+pub use unix::{process_cpu_time, spawn, thread_cpu_time_ns};
 
 #[cfg(windows)]
 mod windows;
 #[cfg(windows)]
-pub use windows::{memory_usage, process_cpu_time, thread_cpu_time_ns};
+pub use windows::{
+    is_translated, libc_version, memory_usage, os_version, process_cpu_time, spawn,
+    thread_cpu_time_ns, windows_environment,
+};
 
 // Other Unix flavours compile, but report memory as unsupported.
 #[cfg(all(
@@ -34,4 +39,26 @@ pub use windows::{memory_usage, process_cpu_time, thread_cpu_time_ns};
 ))]
 pub fn memory_usage() -> Result<crate::StMemory, i32> {
     Err(crate::ST_ERR_UNSUPPORTED)
+}
+
+#[cfg(all(
+    unix,
+    not(any(target_os = "linux", target_os = "android", target_os = "macos"))
+))]
+pub use unix::kernel_release as os_version;
+
+#[cfg(all(
+    unix,
+    not(any(target_os = "linux", target_os = "android", target_os = "macos"))
+))]
+pub fn libc_version() -> Option<String> {
+    None
+}
+
+#[cfg(all(
+    unix,
+    not(any(target_os = "linux", target_os = "android", target_os = "macos"))
+))]
+pub fn is_translated() -> bool {
+    false
 }

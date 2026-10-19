@@ -2,23 +2,37 @@
 name = "suggestedtests_native"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.75"
+rust-version = "1.77"
 license = "MIT"
-description = "OS-agnostic C ABI bridge (Windows/Linux/macOS) used by the suggestedtests Dart package."
+description = "OS-agnostic C ABI (and JNI) bridge for Windows, Linux and macOS, shared by every suggestedtests package."
 publish = false
 
 [lib]
-crate-type = ["cdylib"]
+# cdylib: loaded by Dart, Python, PHP (C ABI) and Java (JNI).
+# rlib: linked into the Node.js addon in node/.
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# 0.3.1+ re-exports 0.4, which needs proc macros and a newer rustc.
+jni-sys = "=0.3.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
+    "Wdk_System_SystemServices",
     "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
     "Win32_System_ProcessStatus",
+    "Win32_System_Registry",
+    "Win32_System_SystemInformation",
     "Win32_System_Threading",
 ] }
+
+[workspace]
+members = [".", "node"]
 
 [profile.release]
 opt-level = 3

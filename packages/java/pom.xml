@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.lesterkaufungen</groupId>
+  <artifactId>suggestedtests</artifactId>
+  <version>0.1.0</version>
+  <packaging>jar</packaging>
+
+  <name>suggestedtests</name>
+  <description>JUnit 5 helpers: performance and memory budgets backed by a native OS bridge (JNI), eventually, given/when/then scenarios, spies, seeded test data, race and leak checks.</description>
+  <url>https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/java</url>
+
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Lester K.</name>
+      <url>https://github.com/lesterkaufungen</url>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/lesterkaufungen/suggestedtests</url>
+    <connection>scm:git:https://github.com/lesterkaufungen/suggestedtests.git</connection>
+  </scm>
+
+  <properties>
+    <maven.compiler.release>8</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <junit.version>5.14.4</junit.version>
+    <!-- Monorepo prebuilts, bundled as resources (see <resources>). -->
+    <native.prebuilt>${project.basedir}/../../native/prebuilt</native.prebuilt>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <!-- Only the JUnit extension needs it, and tests always have it. -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Only SuggestedTestsRule needs it (JUnit 4, Android's default runner). -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.13.2</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Only LoadBridgeOnTestNGStart needs it; TestNG runs have it. 7.5.1 is the
+         last release for Java 8. -->
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.5.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <!-- Only LoadBridgeOnSessionStart needs it; the JUnit Platform has it at runtime. -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${native.prebuilt}</directory>
+        <targetPath>io/github/lesterkaufungen/suggestedtests/native</targetPath>
+        <!-- Android's libraries ship in the AAR (tool/build_aar.sh), not here. -->
+        <excludes>
+          <exclude>android-*/**</exclude>
+        </excludes>
+        <includes>
+          <include>*/libsuggestedtests_native.so</include>
+          <include>*/libsuggestedtests_native.dylib</include>
+          <include>*/suggestedtests_native.dll</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <!-- release 8 is "obsolete" to newer javac, but it is the point. -->
+            <arg>-Xlint:-options</arg>
+            <arg>-Werror</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.5.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.6</version>
+        <configuration>
+          <trimStackTrace>false</trimStackTrace>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>io.github.lesterkaufungen.suggestedtests</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.12.0</version>
+        <configuration>
+          <!-- Every public API member needs a doc comment. -->
+          <doclint>all,-missing</doclint>
+          <failOnWarnings>true</failOnWarnings>
+          <!-- Linking the Java 8 API docs from a modular javadoc only warns. -->
+          <detectJavaApiLink>false</detectJavaApiLink>
+          <excludePackageNames>io.github.lesterkaufungen.suggestedtests.internal</excludePackageNames>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- mvn -P junit6 test: against JUnit 6. Its classes use Java 9+
+         @Deprecated(since, forRemoval), which javac warns about with release 8. -->
+    <profile>
+      <id>junit6</id>
+      <properties>
+        <junit.version>6.1.3</junit.version>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <compilerArgs combine.children="append">
+                <arg>-Xlint:-classfile</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- mvn -P release deploy: sources, javadoc, signatures, Maven Central. -->
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.4.0</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals><goal>jar-no-fork</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals><goal>jar</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.2.8</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals><goal>sign</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.sonatype.central</groupId>
+            <artifactId>central-publishing-maven-plugin</artifactId>
+            <version>0.12.0</version>
+            <extensions>true</extensions>
+            <configuration>
+              <publishingServerId>central</publishingServerId>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

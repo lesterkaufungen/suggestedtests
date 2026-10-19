@@ -6,4 +6,9 @@ coverage/
 .idea/
 *.iml
 .DS_Store
-native/target/
+native/target*/
+# tool/release_build.sh and tool/release_publish.sh
+release/
+# the logins tool/release_publish.sh uses: github.token, pypi.token, npm.token
+/*.token
+__pycache__/

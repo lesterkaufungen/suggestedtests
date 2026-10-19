@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Consumes the library the way a TestNG project does, with no JUnit on the
+     classpath. Run after `./mvnw install` in packages/java:
+       ./mvnw -f compat/testng/pom.xml test                          # Java 21
+       ./mvnw -f compat/testng/pom.xml test -Djvm=<jdk8>/bin/java    # Java 8 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.github.lesterkaufungen.compat</groupId>
+  <artifactId>suggestedtests-testng-compat</artifactId>
+  <version>1</version>
+
+  <properties>
+    <maven.compiler.release>8</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <suggestedtests.version>0.1.0</suggestedtests.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.lesterkaufungen</groupId>
+      <artifactId>suggestedtests</artifactId>
+      <version>${suggestedtests.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- 7.5.1: the last TestNG for Java 8. -->
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>7.5.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.16.0</version>
+        <configuration>
+          <compilerArgs>
+            <arg>-Xlint:all</arg>
+            <arg>-Xlint:-options</arg>
+            <arg>-Werror</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.6</version>
+        <configuration>
+          <trimStackTrace>false</trimStackTrace>
+          <!-- Run by HelpersTest in a child JVM, not as part of the suite. -->
+          <excludes>
+            <exclude>**/NoNativeHelpers.java</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

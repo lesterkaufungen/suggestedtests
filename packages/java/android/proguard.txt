@@ -1,0 +1,13 @@
+# Consumer rules: keep the JNI entry points the native library binds to.
+-keep class io.github.lesterkaufungen.suggestedtests.internal.NativeBridge {
+    native <methods>;
+}
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+# Spy builds proxies of functional interfaces by reflection.
+-keepattributes Signature,*Annotation*
+# LoadBridgeOnSessionStart is for the JUnit Platform launcher, which Android doesn't have.
+-dontwarn org.junit.platform.launcher.**
+# LoadBridgeOnTestNGStart is for TestNG, which Android instrumentation doesn't use.
+-dontwarn org.testng.**

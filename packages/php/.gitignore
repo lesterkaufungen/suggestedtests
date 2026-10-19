@@ -1,0 +1,9 @@
+vendor/
+# PHP 7.4 checks (tool/release_build.sh)
+vendor-7.4/
+composer-7.4.*
+composer.lock
+.phpunit.cache/
+# PHPUnit 9 (PHP 7.4)
+.phpunit.result.cache
+/native/

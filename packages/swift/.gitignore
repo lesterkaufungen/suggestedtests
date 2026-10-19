@@ -1,0 +1,5 @@
+.build/
+.swiftpm/
+Package.resolved
+# tool/stage.sh swift (the split repo bundles them; the monorepo uses native/prebuilt)
+/Sources/SuggestedTests/Prebuilt/

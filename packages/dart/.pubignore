@@ -1,0 +1,6 @@
+# Replaces .gitignore for `dart pub publish`: unlike .gitignore it keeps the
+# native/ copy made by `tool/stage.sh dart`, which the package must ship.
+.dart_tool/
+build/
+pubspec.lock
+native/target/
