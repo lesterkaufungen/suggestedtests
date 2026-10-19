@@ -23,6 +23,12 @@ public struct SuggestedTestsFailure: Error, CustomStringConvertible, LocalizedEr
     self.message = message
   }
 
+  /// Ends `message` with the caller's position: XCTest on Linux reports a
+  /// thrown error at `<EXPR>:0`.
+  init(_ message: String, file: StaticString, line: UInt) {
+    self.message = "\(message)\nat \(file):\(line)"
+  }
+
   public var description: String { message }
   public var errorDescription: String? { message }
 }

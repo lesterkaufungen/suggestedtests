@@ -14,7 +14,8 @@ import Foundation
 /// `try await eventually { ... }`.
 @discardableResult
 public func eventually<T>(
-  timeout: Double = 5, interval: Double = 0.02, _ body: () throws -> T
+  timeout: Double = 5, interval: Double = 0.02, file: StaticString = #fileID, line: UInt = #line,
+  _ body: () throws -> T
 ) throws -> T {
   NativeBridge.preload()
   try checkTimes(timeout, interval)
@@ -26,7 +27,7 @@ public func eventually<T>(
       return try body()
     } catch {
       if DispatchTime.now().uptimeNanoseconds >= deadline {
-        throw timedOut(timeout, attempts, error)
+        throw timedOut(timeout, attempts, error, file, line)
       }
       Thread.sleep(forTimeInterval: interval)
     }
@@ -37,7 +38,8 @@ public func eventually<T>(
 /// `Task.sleep`, so it doesn't block a thread.
 @discardableResult
 public func eventually<T>(
-  timeout: Double = 5, interval: Double = 0.02, _ body: () async throws -> T
+  timeout: Double = 5, interval: Double = 0.02, file: StaticString = #fileID, line: UInt = #line,
+  _ body: () async throws -> T
 ) async throws -> T {
   NativeBridge.preload()
   try checkTimes(timeout, interval)
@@ -49,7 +51,7 @@ public func eventually<T>(
       return try await body()
     } catch {
       if DispatchTime.now().uptimeNanoseconds >= deadline {
-        throw timedOut(timeout, attempts, error)
+        throw timedOut(timeout, attempts, error, file, line)
       }
       try await Task.sleep(nanoseconds: UInt64(interval * 1e9))
     }
@@ -65,8 +67,10 @@ private func checkTimes(_ timeout: Double, _ interval: Double) throws {
   }
 }
 
-private func timedOut(_ timeout: Double, _ attempts: Int, _ error: Error) -> SuggestedTestsFailure {
+private func timedOut(
+  _ timeout: Double, _ attempts: Int, _ error: Error, _ file: StaticString, _ line: UInt
+) -> SuggestedTestsFailure {
   SuggestedTestsFailure(
     "eventually: still failing after \(formatNanoseconds(timeout * 1e9)) "
-      + "(\(attempts) attempts). Last error:\n\(error)")
+      + "(\(attempts) attempts). Last error:\n\(error)", file: file, line: line)
 }

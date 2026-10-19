@@ -81,6 +81,7 @@ def expect_memory(
             with expect_memory(max_peak_growth=50 * MiB):
                 repository.load_all()
     """
+    __tracebackhide__ = True
     if max_rss_growth is None and max_peak_growth is None:
         raise ValueError("Provide max_rss_growth and/or max_peak_growth.")
     for name, value in (("max_rss_growth", max_rss_growth), ("max_peak_growth", max_peak_growth)):
@@ -162,6 +163,7 @@ def expect_allocations(
                 for i in range(10_000):
                     cache.put(i, str(i))
     """
+    __tracebackhide__ = True
     if max_net is None and max_peak is None:
         raise ValueError("Provide max_net and/or max_peak.")
     if top < 0:

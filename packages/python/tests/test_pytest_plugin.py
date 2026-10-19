@@ -54,3 +54,33 @@ def test_pytest_loads_the_bridge_without_any_import(pytester, monkeypatch):
     result = pytester.runpytest_subprocess()
     result.assert_outcomes(passed=1)
     assert result.stderr.str().count("suggestedtests: platform: ") == 1, result.stderr.str()
+
+
+def test_failures_point_at_the_test_not_the_helper(pytester):
+    pytester.makepyfile(
+        """
+        from suggestedtests import assert_unique, eventually, expect_performance
+
+        def test_unique():
+            assert_unique(["a", "b", "a"])
+
+        def test_budget():
+            expect_performance(lambda: sum(range(10_000)), budget=1e-9, iterations=2)
+
+        def test_eventually():
+            def check():
+                assert False, "not yet"
+            eventually(check, timeout=0.01)
+        """
+    )
+    result = pytester.runpytest()
+    result.assert_outcomes(failed=3)
+    output = result.stdout.str()
+    assert "suggestedtests/assertions.py" not in output, output
+    assert "suggestedtests/performance.py" not in output, output
+    result.stdout.fnmatch_lines(["*Expected unique elements, but 'a' appears at index 0 and 2"])
+    # (pytest < 8 still shows eventually's frame in the chained last error.)
+    result.stdout.fnmatch_lines(
+        [">       eventually(check, timeout=0.01)", "E       AssertionError: Condition not met *"],
+        consecutive=True,
+    )

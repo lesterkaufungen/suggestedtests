@@ -3,7 +3,7 @@ description: >-
   Flutter test helpers: table-driven cases, given/when/then scenarios,
   performance budgets, eventually, spies, seeded test data and WidgetTester
   shortcuts.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/lesterkaufungen/suggestedtests/tree/main/packages/dart
 issue_tracker: https://github.com/lesterkaufungen/suggestedtests/issues
 topics:

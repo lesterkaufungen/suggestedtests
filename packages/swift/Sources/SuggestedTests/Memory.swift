@@ -53,24 +53,26 @@ public func measureMemory(_ body: () async throws -> Void) async throws -> Memor
 /// ```
 @discardableResult
 public func expectMemory(
-  maxRSSGrowth: Int? = nil, maxPeakGrowth: Int? = nil, _ body: () throws -> Void
+  maxRSSGrowth: Int? = nil, maxPeakGrowth: Int? = nil,
+  file: StaticString = #fileID, line: UInt = #line, _ body: () throws -> Void
 ) throws -> MemoryReport {
   NativeBridge.preload()
   try checkBudgets(maxRSSGrowth, maxPeakGrowth)
   let report = try measureMemory(body)
-  try checkReport(report, maxRSSGrowth, maxPeakGrowth)
+  try checkReport(report, maxRSSGrowth, maxPeakGrowth, file, line)
   return report
 }
 
 /// ``expectMemory(maxRSSGrowth:maxPeakGrowth:_:)`` for an async body.
 @discardableResult
 public func expectMemory(
-  maxRSSGrowth: Int? = nil, maxPeakGrowth: Int? = nil, _ body: () async throws -> Void
+  maxRSSGrowth: Int? = nil, maxPeakGrowth: Int? = nil,
+  file: StaticString = #fileID, line: UInt = #line, _ body: () async throws -> Void
 ) async throws -> MemoryReport {
   NativeBridge.preload()
   try checkBudgets(maxRSSGrowth, maxPeakGrowth)
   let report = try await measureMemory(body)
-  try checkReport(report, maxRSSGrowth, maxPeakGrowth)
+  try checkReport(report, maxRSSGrowth, maxPeakGrowth, file, line)
   return report
 }
 
@@ -85,17 +87,19 @@ private func checkBudgets(_ maxRSSGrowth: Int?, _ maxPeakGrowth: Int?) throws {
   }
 }
 
-private func checkReport(_ report: MemoryReport, _ maxRSSGrowth: Int?, _ maxPeakGrowth: Int?) throws
-{
+private func checkReport(
+  _ report: MemoryReport, _ maxRSSGrowth: Int?, _ maxPeakGrowth: Int?, _ file: StaticString,
+  _ line: UInt
+) throws {
   if let budget = maxRSSGrowth, report.rssGrowthBytes > budget {
     throw SuggestedTestsFailure(
       "memory budget exceeded: RSS grew \(formatBytes(report.rssGrowthBytes)) > "
-        + "budget \(formatBytes(budget))\n\(report)")
+        + "budget \(formatBytes(budget))\n\(report)", file: file, line: line)
   }
   if let budget = maxPeakGrowth, report.peakGrowthBytes > budget {
     throw SuggestedTestsFailure(
       "memory budget exceeded: peak RSS grew \(formatBytes(report.peakGrowthBytes)) > "
-        + "budget \(formatBytes(budget))\n\(report)")
+        + "budget \(formatBytes(budget))\n\(report)", file: file, line: line)
   }
 }
 

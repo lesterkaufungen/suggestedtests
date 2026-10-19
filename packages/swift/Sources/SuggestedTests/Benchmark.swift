@@ -137,12 +137,12 @@ public func benchmark(
 public func expectPerformance(
   _ name: String = "benchmark", budget: Double, statistic: Statistic = .median,
   iterations: Int = 20, warmup: Int = 3, clock: BenchmarkClock = .wall,
-  _ body: () throws -> Void
+  file: StaticString = #fileID, line: UInt = #line, _ body: () throws -> Void
 ) throws -> BenchmarkResult {
   NativeBridge.preload()
   try checkBudget(budget)
   let result = try benchmark(name, iterations: iterations, warmup: warmup, clock: clock, body)
-  try checkResult(result, budget: budget, statistic: statistic)
+  try checkResult(result, budget: budget, statistic: statistic, file: file, line: line)
   return result
 }
 
@@ -151,13 +151,13 @@ public func expectPerformance(
 public func expectPerformance(
   _ name: String = "benchmark", budget: Double, statistic: Statistic = .median,
   iterations: Int = 20, warmup: Int = 3, clock: BenchmarkClock = .wall,
-  _ body: () async throws -> Void
+  file: StaticString = #fileID, line: UInt = #line, _ body: () async throws -> Void
 ) async throws -> BenchmarkResult {
   NativeBridge.preload()
   try checkBudget(budget)
   let result = try await benchmark(
     name, iterations: iterations, warmup: warmup, clock: clock, body)
-  try checkResult(result, budget: budget, statistic: statistic)
+  try checkResult(result, budget: budget, statistic: statistic, file: file, line: line)
   return result
 }
 
@@ -174,13 +174,15 @@ private func checkBudget(_ budget: Double) throws {
   }
 }
 
-private func checkResult(_ result: BenchmarkResult, budget: Double, statistic: Statistic) throws {
+private func checkResult(
+  _ result: BenchmarkResult, budget: Double, statistic: Statistic, file: StaticString, line: UInt
+) throws {
   let actual = result[statistic]
   let budgetNanoseconds = budget * 1e9
   if actual > budgetNanoseconds {
     throw SuggestedTestsFailure(
       "performance budget exceeded: \(statistic.rawValue) \(formatNanoseconds(actual)) > "
-        + "budget \(formatNanoseconds(budgetNanoseconds))\n\(result)")
+        + "budget \(formatNanoseconds(budgetNanoseconds))\n\(result)", file: file, line: line)
   }
 }
 

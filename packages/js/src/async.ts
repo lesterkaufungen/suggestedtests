@@ -67,6 +67,8 @@ export interface LeakOptions {
 }
 
 interface ResourceTracker {
+  /** Called when the body has finished: resources created later aren't its own. */
+  bodyFinished(): void;
   /** Types of the resources still open, e.g. `["Timeout", "TCPServerWrap"]`. */
   open(): string[];
   stop(): void;
@@ -86,49 +88,82 @@ const NOT_LEAKS = new Set([
   "TIMERWRAP",
 ]);
 
-/** Set while the helper creates its own polling timer. */
-let creatingOwnTimer = false;
+/**
+ * The `getActiveResourcesInfo()` names of async_hooks resource types (the
+ * same on Node 18 and 24). Only these are matched by identity on Node 17.3+.
+ */
+const RESOURCE_NAMES = new Map([
+  ["Timeout", "Timeout"],
+  ["Immediate", "Immediate"],
+  ["TCPSERVERWRAP", "TCPServerWrap"],
+  ["TCPWRAP", "TCPSocketWrap"],
+  ["PIPESERVERWRAP", "PipeWrap"],
+  ["PIPEWRAP", "PipeWrap"],
+  ["UDPWRAP", "UDPWrap"],
+  ["PROCESSWRAP", "ProcessWrap"],
+  ["FSEVENTWRAP", "FSEventWrap"],
+  ["STATWATCHER", "StatWatcher"],
+  ["GETADDRINFOREQWRAP", "GetAddrInfoReqWrap"],
+]);
+
+function countTypes(types: readonly string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const type of types) counts.set(type, (counts.get(type) ?? 0) + 1);
+  return counts;
+}
 
 /**
- * Tracks the libuv resources opened from now on. Uses
- * `process.getActiveResourcesInfo()` (Node 17.3+) and otherwise `async_hooks`,
- * which reports every resource's creation and destruction.
+ * Tracks the libuv resources the body opens. `async_hooks` reports each
+ * resource's creation and destruction; on Node 17.3+ the result is also
+ * checked against `process.getActiveResourcesInfo()`, whose names it uses.
  */
 function trackResources(ignore: readonly string[]): ResourceTracker {
-  const p = process as unknown as { getActiveResourcesInfo?: () => string[] };
-  if (typeof p.getActiveResourcesInfo === "function") {
-    const count = (): Map<string, number> => {
-      const counts = new Map<string, number>();
-      for (const type of p.getActiveResourcesInfo!()) counts.set(type, (counts.get(type) ?? 0) + 1);
-      return counts;
-    };
-    const before = count();
-    return {
-      open() {
-        const result: string[] = [];
-        for (const [type, n] of count()) {
-          for (let i = before.get(type) ?? 0; i < n; i++)
-            if (!ignore.includes(type)) result.push(type);
-        }
-        return result;
-      },
-      stop() {},
-    };
-  }
-  const live = new Map<number, string>();
+  // The resources created while the body runs, until they are destroyed.
+  const created = new Map<number, { type: string; resource: { hasRef?: () => boolean } }>();
+  let recording = true;
   const hook = asyncHooks.createHook({
-    init(id, type) {
-      if (creatingOwnTimer || NOT_LEAKS.has(type) || ignore.includes(type)) return;
-      live.set(id, type);
+    init(id, type, _trigger, resource) {
+      if (recording && !NOT_LEAKS.has(type)) created.set(id, { type, resource });
     },
     destroy(id) {
-      live.delete(id);
+      created.delete(id);
     },
   });
   hook.enable();
-  return {
-    open: () => [...live.values()],
+  // Unref'd handles don't keep the process alive, so they aren't leaks.
+  const live = (): string[] =>
+    [...created.values()]
+      .filter(({ resource }) => typeof resource.hasRef !== "function" || resource.hasRef())
+      .map(({ type }) => type);
+  const tracker = {
+    bodyFinished: () => {
+      recording = false;
+    },
+    open: () => live().filter((type) => !ignore.includes(type)),
     stop: () => hook.disable(),
+  };
+  const p = process as unknown as { getActiveResourcesInfo?: () => string[] };
+  if (typeof p.getActiveResourcesInfo !== "function") return tracker;
+  const before = countTypes(p.getActiveResourcesInfo());
+  return {
+    ...tracker,
+    open() {
+      const own = countTypes(
+        live()
+          .map((type) => RESOURCE_NAMES.get(type))
+          .filter((name): name is string => name !== undefined),
+      );
+      const result: string[] = [];
+      for (const [name, n] of countTypes(p.getActiveResourcesInfo!())) {
+        if (ignore.includes(name)) continue;
+        // When the runner closes a handle of the same type meanwhile, the
+        // difference alone hides one the body left open; the body's own live
+        // resources are a lower bound (capped, so Node counts each of them).
+        const leaked = Math.max(n - (before.get(name) ?? 0), Math.min(own.get(name) ?? 0, n));
+        for (let i = 0; i < leaked; i++) result.push(name);
+      }
+      return result;
+    },
   };
 }
 
@@ -162,6 +197,7 @@ export async function expectNoLeakedHandles(
   const tracker = trackResources(ignore);
   try {
     await body();
+    tracker.bodyFinished();
     const start = realTimers.hrtime();
     for (;;) {
       const open = tracker.open();
@@ -171,10 +207,7 @@ export async function expectNoLeakedHandles(
           `Handles still open ${formatMs(timeoutMs)} after the body finished: ${summarize(open)}`,
         );
       }
-      creatingOwnTimer = true;
-      const wait = sleep(5); // init hooks run synchronously inside setTimeout
-      creatingOwnTimer = false;
-      await wait;
+      await sleep(5);
     }
   } finally {
     tracker.stop();

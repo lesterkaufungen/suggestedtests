@@ -3,6 +3,7 @@ package io.github.lesterkaufungen.suggestedtests;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +43,9 @@ public final class Spy<F> {
           Object[] a = args == null ? new Object[0] : args;
           if (method.getDeclaringClass() == Object.class) return objectMethod(proxyObject, method, a);
           if (!method.equals(single)) {
-            if (method.isDefault()) return invokeDefault(proxyObject, method, a);
+            if (isDefault(method)) return invokeDefault(proxyObject, method, a);
+            Method body = desugaredDefault(method);
+            if (body != null) return invokeStatic(body, prepend(proxyObject, a));
             throw new UnsupportedOperationException(method + " is not the spied method");
           }
           calls.add(Collections.unmodifiableList(Arrays.asList(a.clone())));
@@ -59,13 +62,61 @@ public final class Spy<F> {
   private static Method singleAbstractMethod(Class<?> type) {
     Method found = null;
     for (Method m : type.getMethods()) {
-      if (!m.isDefault() && !java.lang.reflect.Modifier.isStatic(m.getModifiers()) && !isObjectMethod(m)) {
+      if (!isDefault(m)
+          && !Modifier.isStatic(m.getModifiers())
+          && !isObjectMethod(m)
+          && desugaredDefault(m) == null) {
         if (found != null) throw new IllegalArgumentException(type.getName() + " is not a functional interface");
         found = m;
       }
     }
     if (found == null) throw new IllegalArgumentException(type.getName() + " has no abstract method");
     return found;
+  }
+
+  /** {@link Method#isDefault()}, which Android only has from API 24 (desugaring doesn't add it). */
+  private static boolean isDefault(Method m) {
+    int kind = m.getModifiers() & (Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC);
+    return kind == Modifier.PUBLIC && m.getDeclaringClass().isInterface();
+  }
+
+  /**
+   * Where D8 moved the body of default method {@code m} when it desugared it (Android below API
+   * 24): {@code I$-CC.$default$m(I, ...)}, with {@code java.} replaced by {@code j$.} for the JDK
+   * interfaces of core library desugaring. {@code I.m} itself is then abstract. Null for a really
+   * abstract method.
+   */
+  private static Method desugaredDefault(Method m) {
+    Class<?> type = m.getDeclaringClass();
+    if (!type.isInterface()) return null;
+    Class<?>[] params = m.getParameterTypes();
+    Class<?>[] withSelf = new Class<?>[params.length + 1];
+    withSelf[0] = type;
+    System.arraycopy(params, 0, withSelf, 1, params.length);
+    ClassLoader loader = type.getClassLoader() != null ? type.getClassLoader() : Spy.class.getClassLoader();
+    String name = type.getName();
+    String companion = (name.startsWith("java.") ? "j$." + name.substring(5) : name) + "$-CC";
+    try {
+      Method body = Class.forName(companion, false, loader).getMethod("$default$" + m.getName(), withSelf);
+      return Modifier.isStatic(body.getModifiers()) ? body : null;
+    } catch (ClassNotFoundException | NoSuchMethodException e) {
+      return null; // not desugared
+    }
+  }
+
+  private static Object[] prepend(Object first, Object[] rest) {
+    Object[] all = new Object[rest.length + 1];
+    all[0] = first;
+    System.arraycopy(rest, 0, all, 1, rest.length);
+    return all;
+  }
+
+  private static Object invokeStatic(Method method, Object[] args) throws Throwable {
+    try {
+      return method.invoke(null, args);
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
+    }
   }
 
   private static boolean isObjectMethod(Method m) {

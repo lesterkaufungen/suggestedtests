@@ -95,13 +95,13 @@ or your editor's rules (215 tokens of context, paid back after about
 <dependency>
   <groupId>io.github.lesterkaufungen</groupId>
   <artifactId>suggestedtests</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <scope>test</scope>
 </dependency>
 ```
 
 ```kotlin
-testImplementation("io.github.lesterkaufungen:suggestedtests:0.1.0")
+testImplementation("io.github.lesterkaufungen:suggestedtests:0.1.1")
 ```
 
 Requires Java 8+ and works with JUnit 5 and 6, JUnit 4 (`SuggestedTestsRule`),
@@ -110,8 +110,8 @@ TestNG, Gradle and Kotlin. It has no dependencies of its own.
 ### Kotlin, Gradle and Android
 
 ```kotlin
-testImplementation("io.github.lesterkaufungen:suggestedtests:0.1.0")               // JVM / Android local tests
-androidTestImplementation("io.github.lesterkaufungen:suggestedtests-android:0.1.0") // on devices (AAR)
+testImplementation("io.github.lesterkaufungen:suggestedtests:0.1.1")               // JVM / Android local tests
+androidTestImplementation("io.github.lesterkaufungen:suggestedtests-android:0.1.1") // on devices (AAR)
 
 Scenario.given("an empty cart") { Cart() }
     .`when`("two items are added") { it.add(10).add(20) }

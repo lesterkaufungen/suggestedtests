@@ -16,6 +16,7 @@ def assert_unique(items: Iterable[object]) -> None:
 
         assert_unique(user.id for user in users)
     """
+    __tracebackhide__ = True  # pytest shows the caller's line, not ours
     seen: dict[object, int] = {}
     unhashable: list[tuple[int, object]] = []
     for index, item in enumerate(items):
@@ -40,6 +41,7 @@ def no_leaked_threads(*, timeout: Seconds = 1.0) -> Iterator[None]:
                 with WorkerPool(4) as pool:
                     pool.submit(job)
     """
+    __tracebackhide__ = True
     timeout_ns = to_ns(timeout, "timeout")
     before = set(threading.enumerate())
     yield

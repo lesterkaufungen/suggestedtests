@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- pytest tracebacks of failed helpers (`assert_unique`, `expect_performance`, `eventually`, `expect_memory`, `expect_allocations`, `no_leaked_threads`, `completes_within`) end at the test's line instead of inside the package.
+
 ## 0.1.0
 
 - Optional startup report: with `SUGGESTEDTESTS_VERBOSE=1` or `SystemProbe.set_verbose()` / `SystemProbe.verbose()`, the native bridge prints the platform and environment (OS, arch, libc, container, VM) to stderr once. Off by default.

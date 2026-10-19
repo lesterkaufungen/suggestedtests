@@ -87,6 +87,10 @@ final class BenchmarkTest extends TestCase
         try {
             $this->assertPerformance(fn () => str_repeat('x', 100_000), 0, Statistic::Max, 2, 3, 'repeat');
         } catch (AssertionFailedError $e) {
+            // Counted although it failed, or PHPUnit also reports the test as risky.
+            $this->assertSame(1, method_exists($this, 'numberOfAssertionsPerformed')
+                ? $this->numberOfAssertionsPerformed()
+                : $this->getNumAssertions()); // PHPUnit 9
             $this->assertMatchesRegularExpression('/^Performance budget exceeded: max .* > budget 0µs\nrepeat: n=2/', $e->getMessage());
             return;
         }

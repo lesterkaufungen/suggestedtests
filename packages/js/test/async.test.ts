@@ -62,6 +62,37 @@ test("reports leaked timers and servers", async () => {
   }
 });
 
+test("a handle closed meanwhile doesn't hide a leak", async () => {
+  // The runner's own timer ends while the helper waits (as Vitest's does).
+  const runners = setTimeout(() => {}, 10);
+  let leaked: ReturnType<typeof setInterval> | undefined;
+  try {
+    await expect(
+      expectNoLeakedHandles(
+        async () => {
+          leaked = setInterval(() => {}, 10_000);
+        },
+        { timeoutMs: 50 },
+      ),
+    ).rejects.toThrow("Handles still open 50.00ms after the body finished: 1 × Timeout");
+  } finally {
+    clearTimeout(runners);
+    clearInterval(leaked);
+  }
+});
+
+test("unref'd handles aren't leaks", async () => {
+  let timer: ReturnType<typeof setInterval> | undefined;
+  try {
+    await expectNoLeakedHandles(async () => {
+      timer = setInterval(() => {}, 10_000);
+      timer.unref();
+    });
+  } finally {
+    clearInterval(timer);
+  }
+});
+
 test("validates options", async () => {
   await expect(expectNoLeakedHandles(() => {}, { timeoutMs: -1 })).rejects.toThrow(RangeError);
 });

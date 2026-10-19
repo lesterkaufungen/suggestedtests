@@ -89,6 +89,21 @@ void main() {
     );
   });
 
+  test('formatDuration', () {
+    expect(formatDuration(Duration.zero), '0µs');
+    expect(formatDuration(const Duration(microseconds: 850)), '850µs');
+    expect(formatDuration(const Duration(microseconds: 12500)), '12.50ms');
+    expect(formatDuration(const Duration(milliseconds: 1250)), '1.25s');
+    expect(formatDuration(const Duration(milliseconds: -3)), '-3.00ms');
+    expect(
+      const CpuTime(
+        user: Duration(milliseconds: 1250),
+        system: Duration(milliseconds: 80),
+      ).toString(),
+      'CpuTime(user: 1.25s, system: 80.00ms)',
+    );
+  });
+
   test('formatBytes', () {
     expect(formatBytes(0), '0 B');
     expect(formatBytes(1023), '1023 B');

@@ -6,7 +6,7 @@
 
   <groupId>io.github.lesterkaufungen</groupId>
   <artifactId>suggestedtests</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1</version>
   <packaging>jar</packaging>
 
   <name>suggestedtests</name>
@@ -232,6 +232,9 @@
             <extensions>true</extensions>
             <configuration>
               <publishingServerId>central</publishingServerId>
+              <!-- The default leaves the deployment waiting for a click in the Portal (0.1.0 did). -->
+              <autoPublish>true</autoPublish>
+              <waitUntil>published</waitUntil>
             </configuration>
           </plugin>
         </plugins>

@@ -93,7 +93,7 @@ or your editor's rules (206 tokens of context, paid back after about
 ```swift
 // Package.swift
 dependencies: [
-  .package(url: "https://github.com/lesterkaufungen/suggestedtests-swift.git", from: "0.1.0"),
+  .package(url: "https://github.com/lesterkaufungen/suggestedtests-swift.git", from: "0.1.1"),
 ],
 targets: [
   .testTarget(
@@ -130,7 +130,11 @@ func testBenchmarkReport() throws {
 ```
 performance budget exceeded: median 7.31ms > budget 5.00ms
 benchmark: n=20 min=6.90ms median=7.31ms mean=7.40ms p95=8.02ms max=8.30ms ±310µs
+at AppTests/ParserTests.swift:12
 ```
+
+Every failure ends with the line that called the helper, since XCTest on
+Linux reports thrown errors without one.
 
 The budget is checked against the median by default, which is robust against
 one-off pauses. Pass `statistic: .p95` (or `.min`, `.mean`, `.max`) to check
@@ -151,6 +155,7 @@ func testImportStaysSmall() throws {
 ```
 memory budget exceeded: peak RSS grew 64.0 MiB > budget 50.0 MiB
 MemoryReport(rss: +64.0 MiB, peak: +64.0 MiB, now: MemoryUsage(current: 152.8 MiB, peak: 180.8 MiB))
+at AppTests/ImporterTests.swift:20
 ```
 
 Resident memory is process-wide: allocators keep freed memory, and other

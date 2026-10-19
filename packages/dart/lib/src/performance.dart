@@ -118,15 +118,8 @@ class BenchmarkResult {
   String toString() =>
       '$name${clock == BenchmarkClock.cpu ? ' (cpu)' : ''}: '
       'n=${samples.length} '
-      'min=${_fmt(min)} median=${_fmt(median)} mean=${_fmt(mean)} '
-      'p95=${_fmt(p95)} max=${_fmt(max)} ±${_fmt(stdDev)}';
-}
-
-String _fmt(Duration d) {
-  final us = d.inMicroseconds;
-  if (us < 1000) return '$usµs';
-  if (us < 1000000) return '${(us / 1000).toStringAsFixed(2)}ms';
-  return '${(us / 1000000).toStringAsFixed(2)}s';
+      'min=${formatDuration(min)} median=${formatDuration(median)} mean=${formatDuration(mean)} '
+      'p95=${formatDuration(p95)} max=${formatDuration(max)} ±${formatDuration(stdDev)}';
 }
 
 void _checkCounts(int iterations, int warmup) {
@@ -235,8 +228,8 @@ Future<BenchmarkResult> expectPerformance(
   final actual = result[statistic];
   if (actual > budget) {
     fail(
-      'Performance budget exceeded: ${statistic.name} ${_fmt(actual)} > '
-      'budget ${_fmt(budget)}\n$result',
+      'Performance budget exceeded: ${statistic.name} ${formatDuration(actual)} > '
+      'budget ${formatDuration(budget)}\n$result',
     );
   }
   return result;
@@ -258,6 +251,6 @@ Future<T> expectCompletesWithin<T>(Future<T> future, Duration limit) async {
   try {
     return await future.timeout(limit);
   } on TimeoutException {
-    fail('Future did not complete within ${_fmt(limit)}');
+    fail('Future did not complete within ${formatDuration(limit)}');
   }
 }

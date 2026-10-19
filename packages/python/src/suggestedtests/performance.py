@@ -202,6 +202,7 @@ async def benchmark_async(
 
 
 def _check_budget(result: BenchmarkResult, budget_ns: int, statistic: Statistic | str) -> None:
+    __tracebackhide__ = True
     statistic = Statistic(statistic)
     actual = result[statistic]
     if actual > budget_ns:
@@ -228,6 +229,7 @@ def expect_performance(
         def test_parsing_stays_fast():
             expect_performance(lambda: parse(big_json), budget=0.005)
     """
+    __tracebackhide__ = True
     budget_ns = to_ns(budget, "budget")
     Statistic(statistic)
     result = benchmark(name, body, iterations=iterations, warmup=warmup, clock=clock)
@@ -246,6 +248,7 @@ async def expect_performance_async(
     clock: Clock | str = Clock.WALL,
 ) -> BenchmarkResult:
     """Like `expect_performance`, but awaits `body()` on every run."""
+    __tracebackhide__ = True
     budget_ns = to_ns(budget, "budget")
     Statistic(statistic)
     result = await benchmark_async(name, body, iterations=iterations, warmup=warmup, clock=clock)
@@ -260,6 +263,7 @@ async def completes_within(awaitable: Awaitable[T], limit: Seconds) -> T:
 
         user = await completes_within(repository.load(), 1.0)
     """
+    __tracebackhide__ = True
     limit_ns = to_ns(limit, "limit")
     try:
         return await asyncio.wait_for(awaitable, limit_ns / 1e9)

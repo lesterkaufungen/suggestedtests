@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Failures of `expectPerformance`, `expectMemory`, `eventually` and `assertUnique` end with the line that called the helper (`at AppTests/ParserTests.swift:12`), like `check`: XCTest on Linux reports thrown errors at `<EXPR>:0`. The helpers take `file:` and `line:` parameters with defaults.
+
 ## 0.1.0
 
 Initial release.

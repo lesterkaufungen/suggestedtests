@@ -32,7 +32,8 @@ class CpuTime {
   int get hashCode => Object.hash(user, system);
 
   @override
-  String toString() => 'CpuTime(user: $user, system: $system)';
+  String toString() =>
+      'CpuTime(user: ${formatDuration(user)}, system: ${formatDuration(system)})';
 }
 
 /// Resident memory (RSS / working set) of the process, in bytes.
@@ -215,6 +216,15 @@ abstract final class SystemProbe {
     _ensure('verbose');
     return native.stVerbose() != 0;
   }
+}
+
+/// Formats [duration] the way failure messages do, e.g. `850µs`, `12.50ms`
+/// or `1.25s`.
+String formatDuration(Duration duration) {
+  final us = duration.inMicroseconds;
+  if (us.abs() < 1000) return '$usµs';
+  if (us.abs() < 1000000) return '${(us / 1000).toStringAsFixed(2)}ms';
+  return '${(us / 1000000).toStringAsFixed(2)}s';
 }
 
 /// Formats [bytes] as a human readable size, e.g. `12.5 MiB`.

@@ -1,3 +1,7 @@
+## 0.1.1
+
+- `formatDuration`: durations as failure messages print them (`850µs`, `12.50ms`, `1.25s`). `eventually`'s timeout message and `CpuTime.toString()` use it instead of `Duration.toString()` (`0:00:00.100000`).
+
 ## 0.1.0
 
 Initial release.

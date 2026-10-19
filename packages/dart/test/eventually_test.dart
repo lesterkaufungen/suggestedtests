@@ -30,7 +30,10 @@ void main() {
         isA<TestFailure>().having(
           (e) => e.message,
           'message',
-          allOf(contains('Condition not met'), contains('Expected: <2>')),
+          allOf(
+            contains('Condition not met within 50.00ms'),
+            contains('Expected: <2>'),
+          ),
         ),
       ),
     );

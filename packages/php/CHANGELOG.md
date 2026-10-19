@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- A failing `assertPerformance`, `assertMemory`, `assertEventually`, `assertUniqueElements` or `assertMatchesSnapshot` no longer also marks the test as risky ("did not perform any assertions"): the assertion is counted before it runs.
+
 ## 0.1.0
 
 - Optional startup report: with `SUGGESTEDTESTS_VERBOSE=1` or `SystemProbe::setVerbose()` / `SystemProbe::verbose()`, the native bridge prints the platform and environment (OS, arch, libc, container, VM) to stderr once. Off by default.

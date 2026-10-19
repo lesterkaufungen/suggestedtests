@@ -7,9 +7,10 @@ interface SuggestedTestsMatchers<R = unknown> {
   toHaveUniqueElements(): R;
 }
 
+// No type parameters: Vitest 1-4 declare Assertion<T>, Vitest 5 Assertion<R, T>,
+// and a declaration may leave out parameters that have defaults (all of them do).
 declare module "vitest" {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  interface Assertion<T = any> extends SuggestedTestsMatchers<T> {}
+  interface Assertion extends SuggestedTestsMatchers<void> {}
   interface AsymmetricMatchersContaining extends SuggestedTestsMatchers {}
 }
 

@@ -14,11 +14,13 @@ final class EventuallyTests: XCTestCase {
   }
 
   func testTimesOutWithTheLastError() {
+    let line = #line + 1
     XCTAssertThrowsError(try eventually(timeout: 0.05, interval: 0.01) { try check(false, "cold") })
     {
       let message = "\($0)"
       XCTAssertTrue(message.hasPrefix("eventually: still failing after 50.00ms ("), message)
-      XCTAssertTrue(message.hasSuffix("cold"), message)
+      XCTAssertTrue(
+        message.hasSuffix("cold\nat SuggestedTestsTests/EventuallyTests.swift:\(line)"), message)
     }
   }
 

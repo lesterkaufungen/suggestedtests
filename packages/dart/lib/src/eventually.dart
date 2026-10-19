@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'native/preload.dart';
+import 'system_probe.dart';
 
 /// Re-runs [body] every [interval] until it completes without throwing, then
 /// returns its result. If it still throws after [timeout], the test fails with
@@ -32,7 +33,7 @@ Future<T> eventually<T>(
       if (sw.elapsed >= timeout) {
         Error.throwWithStackTrace(
           TestFailure(
-            'Condition not met within $timeout '
+            'Condition not met within ${formatDuration(timeout)} '
             '($attempts attempts). Last error:\n$error',
           ),
           stack,

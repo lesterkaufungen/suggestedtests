@@ -105,8 +105,8 @@ trait SuggestedTests
      */
     protected function assertEventually(callable $body, float $timeoutMs = 5000, float $intervalMs = 20)
     {
+        $this->addToAssertionCount(1); // before, as PHPUnit's assertions do: a failure isn't also "risky"
         $result = Eventually::until($body, $timeoutMs, $intervalMs);
-        $this->addToAssertionCount(1);
         return $result;
     }
 
@@ -120,8 +120,8 @@ trait SuggestedTests
         string $name = 'benchmark',
         string $clock = Clock::Wall
     ): BenchmarkResult {
-        $result = Benchmark::expect($body, $budgetMs, $statistic, $iterations, $warmup, $name, $clock);
         $this->addToAssertionCount(1);
+        $result = Benchmark::expect($body, $budgetMs, $statistic, $iterations, $warmup, $name, $clock);
         return $result;
     }
 
@@ -133,8 +133,8 @@ trait SuggestedTests
         ?int $maxRssGrowth = null,
         ?int $maxPeakGrowth = null
     ): MemoryReport {
-        $report = Memory::expect($body, $maxHeapGrowth, $maxHeapPeakGrowth, $maxRssGrowth, $maxPeakGrowth);
         $this->addToAssertionCount(1);
+        $report = Memory::expect($body, $maxHeapGrowth, $maxHeapPeakGrowth, $maxRssGrowth, $maxPeakGrowth);
         return $report;
     }
 
@@ -145,8 +145,8 @@ trait SuggestedTests
      */
     protected function assertUniqueElements(iterable $items): void
     {
-        Assert::unique($items);
         $this->addToAssertionCount(1);
+        Assert::unique($items);
     }
 
     /** Asserts that `$spy` was called at least once. */
@@ -221,8 +221,8 @@ trait SuggestedTests
         }
         $safe = preg_replace('/[^A-Za-z0-9_.-]+/', '_', $name);
         $path = dirname((string) $class->getFileName()) . '/__snapshots__/' . $class->getShortName() . "/$safe.txt";
-        $created = Snapshot::assertMatches($value, $path);
         $this->addToAssertionCount(1);
+        $created = Snapshot::assertMatches($value, $path);
         if ($created) {
             fwrite(STDERR, "\nsuggestedtests: wrote snapshot $path\n");
         }

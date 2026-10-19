@@ -32,6 +32,7 @@ def eventually(body: Callable[[], T], *, timeout: Seconds = 5.0, interval: Secon
 
     For coroutines, use `eventually_async`.
     """
+    __tracebackhide__ = True
     timeout_ns, interval_ns = to_ns(timeout, "timeout"), to_ns(interval, "interval")
     start = time.monotonic_ns()
     attempts = 0
@@ -62,6 +63,7 @@ async def eventually_async(
 
         await eventually_async(lambda: queue.assert_empty())
     """
+    __tracebackhide__ = True
     timeout_ns, interval_ns = to_ns(timeout, "timeout"), to_ns(interval, "interval")
     start = time.monotonic_ns()
     attempts = 0

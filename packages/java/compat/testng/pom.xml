@@ -13,7 +13,7 @@
   <properties>
     <maven.compiler.release>8</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <suggestedtests.version>0.1.0</suggestedtests.version>
+    <suggestedtests.version>0.1.1</suggestedtests.version>
   </properties>
 
   <dependencies>

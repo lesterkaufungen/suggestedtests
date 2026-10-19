@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+- `Spy` works on Android API 21-23 with core library desugaring: it no longer calls `Method.isDefault()` (API 24+) and recognizes the default methods D8 desugared (`Function.andThen`, ...), so `Spy.function` and friends no longer fail with "not a functional interface". Calling a desugared default method on a spy runs it.
+- Released with `autoPublish`: 0.1.0's jar waited in the Central Portal for a manual publish.
+
 ## 0.1.0
 
 - Optional startup report: with `SUGGESTEDTESTS_VERBOSE=1` or `SystemProbe.setVerbose()` / `SystemProbe.verbose()` (also `-Dsuggestedtests.verbose=true`), the native bridge prints the platform and environment (OS, arch, libc, container, VM) to stderr once. Off by default.
