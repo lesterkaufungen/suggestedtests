@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "suggestedtests"
-version = "0.1.1"
+version = "0.1.2"
 description = "pytest helpers: performance and memory budgets backed by a native OS bridge, eventually, given/when/then steps, seeded test data and leak checks."
 readme = "README.md"
 license = "MIT"

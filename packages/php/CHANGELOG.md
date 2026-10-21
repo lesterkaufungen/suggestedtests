@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Minor fixes.
+
 ## 0.1.1
 
 - A failing `assertPerformance`, `assertMemory`, `assertEventually`, `assertUniqueElements` or `assertMatchesSnapshot` no longer also marks the test as risky ("did not perform any assertions"): the assertion is counted before it runs.

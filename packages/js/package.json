@@ -1,6 +1,6 @@
 {
   "name": "suggestedtests",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Test helpers for Vitest and Jest: performance and memory budgets backed by a native OS bridge, eventually, given/when/then scenarios, seeded test data and leak checks.",
   "keywords": [
     "testing",

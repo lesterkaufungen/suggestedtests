@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Minor fixes.
+
 ## 0.1.1
 
 - `Spy` works on Android API 21-23 with core library desugaring: it no longer calls `Method.isDefault()` (API 24+) and recognizes the default methods D8 desugared (`Function.andThen`, ...), so `Spy.function` and friends no longer fail with "not a functional interface". Calling a desugared default method on a spy runs it.

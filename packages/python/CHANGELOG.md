@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Minor fixes.
+
 ## 0.1.1
 
 - pytest tracebacks of failed helpers (`assert_unique`, `expect_performance`, `eventually`, `expect_memory`, `expect_allocations`, `no_leaked_threads`, `completes_within`) end at the test's line instead of inside the package.

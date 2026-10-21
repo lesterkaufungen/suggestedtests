@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Minor fixes.
+
 ## 0.1.1
 
 - `expectNoLeakedHandles` no longer misses a leak when another handle of the same type closes meanwhile (as Vitest's own timers do): the resources the body opened are tracked one by one. Unref'd handles don't count as leaks on any Node version.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   POM of the Android AAR, deployed next to the .aar that tool/build_aar.sh builds:
-    mvn deploy:deploy-file -Dfile=target/suggestedtests-android-0.1.1.aar -DpomFile=android/pom.xml ...
+    mvn deploy:deploy-file -Dfile=target/suggestedtests-android-0.1.2.aar -DpomFile=android/pom.xml ...
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -9,7 +9,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.lesterkaufungen</groupId>
   <artifactId>suggestedtests-android</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.2</version>
   <packaging>aar</packaging>
   <name>suggestedtests-android</name>
   <description>suggestedtests for Android instrumented tests: the Java library plus the native bridge for arm64-v8a, armeabi-v7a, x86_64 and x86 (API 21+).</description>
